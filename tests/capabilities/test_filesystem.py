@@ -1,6 +1,5 @@
 """Tests for filesystem capability."""
 
-import os
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
