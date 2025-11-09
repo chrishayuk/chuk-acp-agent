@@ -9,7 +9,7 @@ from chuk_acp_agent.agent.context import Context
 from chuk_acp_agent.agent.interactive import InteractiveAgent
 from chuk_acp_agent.models import MCPConfig, MCPServerConfig
 
-__version__ = "0.1.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "Agent",
