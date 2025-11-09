@@ -36,20 +36,20 @@ wheels = [
 
 [[package]]
 name = "chuk-acp"
-version = "0.3.0"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/dc/6698b6d148f768d7e238491aa46daf07139c01fae3a785d6a0c7f3b3b660/chuk_acp-0.3.0.tar.gz", hash = "sha256:61de553f9c1d2ff046b7d0514c1e8c6eda1199f4fa29c4b2e7ea59ba66115c48", size = 29954, upload-time = "2025-11-09T12:18:32.754Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/39/5e/4804dfd218769874c24419bd99e65e3d0792bf296e240e7591a0b4edb534/chuk_acp-0.3.2.tar.gz", hash = "sha256:84eb54145e889d2bce19b4640d2b5aa98cf3825d4f50afd986d618f552beaf5f", size = 174581, upload-time = "2025-11-09T16:56:02.858Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/10/71a43af2f9c4548db58b7054f5a1283f9efe4e5e0b98dbfd112e180f318d/chuk_acp-0.3.0-py3-none-any.whl", hash = "sha256:f3df8763e20b5af57127b3bfc3c6b3fdda5d057dfd9c10cb64f30fc6094b1eb9", size = 16206, upload-time = "2025-11-09T12:18:31.293Z" },
+    { url = "https://files.pythonhosted.org/packages/71/30/6713b065268996891291ff6ddd43a9c4558790308ea6d65274a9aa442b94/chuk_acp-0.3.2-py3-none-any.whl", hash = "sha256:cf6ac9a9361e5fd86bafcf07307cd83c3a54df71fa38645b2edbfb8294cebaea", size = 77693, upload-time = "2025-11-09T16:56:01.354Z" },
 ]
 
 [[package]]
 name = "chuk-acp-agent"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
@@ -77,9 +77,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.0.0" },
-    { name = "chuk-acp", specifier = ">=0.3.0" },
+    { name = "chuk-acp", specifier = ">=0.3.2" },
     { name = "chuk-acp-agent", extras = ["dev"], marker = "extra == 'all'" },
-    { name = "chuk-tool-processor", specifier = ">=0.1.0" },
+    { name = "chuk-tool-processor", specifier = ">=0.9.7" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
