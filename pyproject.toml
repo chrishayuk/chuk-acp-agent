@@ -1,6 +1,6 @@
 [project]
 name = "chuk-acp-agent"
-version = "0.1.0"
+version = "0.1.1"
 description = "Opinionated agent kit for building sophisticated ACP agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,8 +19,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "chuk-acp>=0.1.0",
     "anyio>=4.0.0",
+    "chuk-acp>=0.3.0",
     "chuk-tool-processor>=0.1.0",
     "pydantic>=2.0.0",
 ]
