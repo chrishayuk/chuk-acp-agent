@@ -1,10 +1,13 @@
-.PHONY: clean clean-pyc clean-build clean-test clean-all test test-cov coverage-report run-examples build help install dev-install version lint format typecheck check examples
+.PHONY: clean clean-pyc clean-build clean-test clean-all test test-cov coverage-report run-examples build help install dev-install version bump-patch bump-minor bump-major publish publish-test publish-manual release lint format typecheck check examples info
 
 # Default target
 help:
 	@echo "Available targets:"
 	@echo "  clean          - Remove Python bytecode and basic artifacts"
 	@echo "  clean-all      - Deep clean everything (pyc, build, test, cache)"
+	@echo "  clean-pyc      - Remove Python bytecode files"
+	@echo "  clean-build    - Remove build artifacts"
+	@echo "  clean-test     - Remove test artifacts"
 	@echo "  install        - Install package in current environment"
 	@echo "  dev-install    - Install package in development mode with dev dependencies"
 	@echo "  test           - Run tests"
@@ -17,6 +20,16 @@ help:
 	@echo "  typecheck      - Run type checking"
 	@echo "  check          - Run all checks (lint, typecheck, test)"
 	@echo "  build          - Build the project"
+	@echo ""
+	@echo "Release targets:"
+	@echo "  version        - Show current version"
+	@echo "  bump-patch     - Bump patch version (0.0.X)"
+	@echo "  bump-minor     - Bump minor version (0.X.0)"
+	@echo "  bump-major     - Bump major version (X.0.0)"
+	@echo "  publish        - Create tag and trigger automated release"
+	@echo "  publish-test   - Manually publish to TestPyPI from local build"
+	@echo "  publish-manual - Manually publish to PyPI from local build"
+	@echo "  release        - Alias for publish"
 	@echo ""
 	@echo "Usage examples:"
 	@echo "  make test-file FILE=src/chuk_acp_agent/agent/base.py"
@@ -200,6 +213,231 @@ typecheck:
 		echo "MyPy not found. Install with: pip install mypy"; \
 	fi
 
-# Run all checks
-check: lint typecheck test
+# Run all checks (matches CI pipeline)
+check: lint typecheck test-cov
 	@echo "All checks completed."
+
+# ============================================================================
+# Version Management and Release Targets
+# ============================================================================
+
+# Bump patch version (0.0.X)
+bump-patch:
+	@echo "Bumping patch version..."
+	@current=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	major=$$(echo $$current | cut -d. -f1); \
+	minor=$$(echo $$current | cut -d. -f2); \
+	patch=$$(echo $$current | cut -d. -f3); \
+	new_patch=$$(($$patch + 1)); \
+	new_version="$$major.$$minor.$$new_patch"; \
+	sed -i.bak "s/^version = \"$$current\"/version = \"$$new_version\"/" pyproject.toml && rm pyproject.toml.bak; \
+	echo "Version bumped: $$current -> $$new_version"; \
+	echo "Review the change, then run 'make publish' to release"
+
+# Bump minor version (0.X.0)
+bump-minor:
+	@echo "Bumping minor version..."
+	@current=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	major=$$(echo $$current | cut -d. -f1); \
+	minor=$$(echo $$current | cut -d. -f2); \
+	new_minor=$$(($$minor + 1)); \
+	new_version="$$major.$$new_minor.0"; \
+	sed -i.bak "s/^version = \"$$current\"/version = \"$$new_version\"/" pyproject.toml && rm pyproject.toml.bak; \
+	echo "Version bumped: $$current -> $$new_version"; \
+	echo "Review the change, then run 'make publish' to release"
+
+# Bump major version (X.0.0)
+bump-major:
+	@echo "Bumping major version..."
+	@current=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	major=$$(echo $$current | cut -d. -f1); \
+	new_major=$$(($$major + 1)); \
+	new_version="$$new_major.0.0"; \
+	sed -i.bak "s/^version = \"$$current\"/version = \"$$new_version\"/" pyproject.toml && rm pyproject.toml.bak; \
+	echo "Version bumped: $$current -> $$new_version"; \
+	echo "Review the change, then run 'make publish' to release"
+
+# Automated release - creates tag and pushes to trigger GitHub Actions
+publish:
+	@echo "Starting automated release process..."
+	@echo ""
+	@# Get current version
+	@version=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	tag="v$$version"; \
+	echo "Version: $$version"; \
+	echo "Tag: $$tag"; \
+	echo ""; \
+	\
+	echo "Pre-flight checks:"; \
+	echo "=================="; \
+	\
+	if git diff --quiet && git diff --cached --quiet; then \
+		echo "✓ Working directory is clean"; \
+	else \
+		echo "✗ Working directory has uncommitted changes"; \
+		echo ""; \
+		git status --short; \
+		echo ""; \
+		echo "Please commit or stash your changes before releasing."; \
+		exit 1; \
+	fi; \
+	\
+	if git tag -l | grep -q "^$$tag$$"; then \
+		echo "✗ Tag $$tag already exists"; \
+		echo ""; \
+		echo "To delete and recreate:"; \
+		echo "  git tag -d $$tag"; \
+		echo "  git push origin :refs/tags/$$tag"; \
+		exit 1; \
+	else \
+		echo "✓ Tag $$tag does not exist yet"; \
+	fi; \
+	\
+	current_branch=$$(git rev-parse --abbrev-ref HEAD); \
+	echo "✓ Current branch: $$current_branch"; \
+	echo ""; \
+	\
+	echo "This will:"; \
+	echo "  1. Create and push tag $$tag"; \
+	echo "  2. Trigger GitHub Actions to:"; \
+	echo "     - Create a GitHub release with changelog"; \
+	echo "     - Run tests on all platforms"; \
+	echo "     - Build and publish to PyPI"; \
+	echo ""; \
+	read -p "Continue? (y/N) " -n 1 -r; \
+	echo ""; \
+	if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi; \
+	\
+	echo ""; \
+	echo "Creating and pushing tag..."; \
+	git tag -a "$$tag" -m "Release $$tag" && \
+	git push origin "$$tag" && \
+	echo "" && \
+	echo "✓ Tag pushed successfully!" && \
+	echo "" && \
+	repo_path=$$(git config --get remote.origin.url | sed 's|^https://github.com/||;s|^git@github.com:||;s|\.git$$||'); \
+	echo "GitHub Actions workflows triggered:" && \
+	echo "  - PyPI publishing: https://github.com/$$repo_path/actions/workflows/publish.yml" && \
+	echo "" && \
+	echo "Monitor progress at: https://github.com/$$repo_path/actions"
+
+# Alias for publish
+release: publish
+
+# Manually publish to TestPyPI from local build
+publish-test: build
+	@echo "Publishing to TestPyPI..."
+	@echo ""
+	@version=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	echo "Version: $$version"; \
+	echo ""; \
+	if [ ! -d "dist" ] || [ -z "$$(ls -A dist 2>/dev/null)" ]; then \
+		echo "✗ No build artifacts found in dist/"; \
+		echo "Run 'make build' first."; \
+		exit 1; \
+	fi; \
+	echo "Distribution files:"; \
+	ls -lh dist/; \
+	echo ""; \
+	echo "This will upload to TestPyPI: https://test.pypi.org/project/chuk-acp-agent/"; \
+	echo ""; \
+	read -p "Continue? (y/N) " -n 1 -r; \
+	echo ""; \
+	if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	if command -v uv >/dev/null 2>&1; then \
+		uv run twine upload --repository testpypi dist/*; \
+	else \
+		twine upload --repository testpypi dist/*; \
+	fi; \
+	if [ $$? -eq 0 ]; then \
+		echo ""; \
+		echo "✓ Successfully published to TestPyPI!"; \
+		echo ""; \
+		echo "View at: https://test.pypi.org/project/chuk-acp-agent/$$version/"; \
+		echo ""; \
+		echo "Test installation:"; \
+		echo "  pip install --index-url https://test.pypi.org/simple/ chuk-acp-agent==$$version"; \
+	fi
+
+# Manually publish to PyPI from local build
+publish-manual: build
+	@echo "⚠️  WARNING: Manual PyPI Publishing"
+	@echo "====================================="
+	@echo ""
+	@version=$$(grep '^version = ' pyproject.toml | cut -d'"' -f2); \
+	echo "Version: $$version"; \
+	echo ""; \
+	if [ ! -d "dist" ] || [ -z "$$(ls -A dist 2>/dev/null)" ]; then \
+		echo "✗ No build artifacts found in dist/"; \
+		echo "Run 'make build' first."; \
+		exit 1; \
+	fi; \
+	echo "Distribution files:"; \
+	ls -lh dist/; \
+	echo ""; \
+	echo "Pre-flight checks:"; \
+	echo "=================="; \
+	if git diff --quiet && git diff --cached --quiet; then \
+		echo "✓ Working directory is clean"; \
+	else \
+		echo "⚠️  Working directory has uncommitted changes"; \
+	fi; \
+	echo ""; \
+	echo "⚠️  This will PERMANENTLY upload version $$version to PyPI."; \
+	echo "⚠️  PyPI uploads cannot be deleted or modified!"; \
+	echo ""; \
+	echo "Recommended: Use 'make publish' for automated release instead."; \
+	echo ""; \
+	read -p "Are you ABSOLUTELY SURE? (type 'yes' to continue) " -r; \
+	echo ""; \
+	if [[ ! $$REPLY == "yes" ]]; then \
+		echo "Aborted."; \
+		exit 1; \
+	fi; \
+	echo ""; \
+	echo "Uploading to PyPI..."; \
+	if command -v uv >/dev/null 2>&1; then \
+		uv run twine upload dist/*; \
+	else \
+		twine upload dist/*; \
+	fi; \
+	if [ $$? -eq 0 ]; then \
+		echo ""; \
+		echo "✓ Successfully published to PyPI!"; \
+		echo ""; \
+		echo "View at: https://pypi.org/project/chuk-acp-agent/$$version/"; \
+		echo ""; \
+		echo "Install with:"; \
+		echo "  pip install chuk-acp-agent==$$version"; \
+		echo ""; \
+		echo "⚠️  Remember to:"; \
+		echo "  1. Create a git tag: git tag v$$version"; \
+		echo "  2. Push the tag: git push origin v$$version"; \
+		echo "  3. Create a GitHub release manually"; \
+	fi
+
+# Show project info
+info:
+	@echo "Project Information:"
+	@echo "==================="
+	@if [ -f "pyproject.toml" ]; then \
+		echo "pyproject.toml found"; \
+		if command -v uv >/dev/null 2>&1; then \
+			echo "UV version: $$(uv --version)"; \
+		fi; \
+		if command -v python >/dev/null 2>&1; then \
+			echo "Python version: $$(python --version)"; \
+		fi; \
+	else \
+		echo "No pyproject.toml found"; \
+	fi
+	@echo "Current directory: $$(pwd)"
+	@echo "Git status:"
+	@git status --porcelain 2>/dev/null || echo "Not a git repository"
