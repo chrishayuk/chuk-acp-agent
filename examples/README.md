@@ -4,6 +4,11 @@ This directory contains example agents demonstrating various features of `chuk-a
 
 ## Quick Start
 
+**Interactive client with MCP tools (Kimi-style):**
+```bash
+chuk-acp-agent client --mcp-config-file examples/mcp_config.json
+```
+
 **Simplest possible agent:**
 ```bash
 uv run examples/echo_agent.py
@@ -70,6 +75,41 @@ Task execution with progress tracking.
 **Run:**
 ```bash
 uvx chuk-acp client uv run examples/plan_agent.py --prompt "analyze this project"
+```
+
+## Interactive Client
+
+The CLI provides an interactive client that can load MCP tools from a config file:
+
+```bash
+# Run with MCP config (Kimi-compatible format)
+chuk-acp-agent client --mcp-config-file examples/mcp_config.json
+```
+
+Once running, you can:
+```
+> list                                    # List all available MCP tools
+> call echo_text {"message": "hello"}    # Call a tool with JSON arguments
+> help                                    # Show help
+```
+
+This is compatible with the Kimi CLI config format, so you can use the same `mcp_config.json` file:
+
+```json
+{
+  "mcpServers": {
+    "echo": {
+      "command": "uvx",
+      "args": ["chuk-mcp-echo", "stdio"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {}
+    }
+  }
+}
 ```
 
 ## MCP Integration Examples

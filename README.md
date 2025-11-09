@@ -38,6 +38,75 @@ class MyAgent(Agent):
 pip install chuk-acp-agent
 ```
 
+## CLI Usage
+
+The `chuk-acp-agent` CLI provides commands for running agents interactively:
+
+### Interactive Client with MCP Tools
+
+Run an interactive agent with MCP tools loaded from a config file:
+
+```bash
+# Run with MCP config file (Kimi-style)
+chuk-acp-agent client --mcp-config-file mcp_config.json
+
+# Or using uvx
+uvx chuk-acp-agent client --mcp-config-file mcp_config.json
+```
+
+The MCP config file follows the standard convention (compatible with Kimi CLI):
+
+```json
+{
+  "mcpServers": {
+    "echo": {
+      "command": "uvx",
+      "args": ["chuk-mcp-echo", "stdio"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Note:** This config format is compatible with Kimi CLI and other tools following the MCP config convention. You can use the same config file with both `chuk-acp-agent client --mcp-config-file` and `kimi --mcp-config-file`.
+
+Once running, you can interact with the agent:
+
+```
+> list                                    # List available tools
+> call echo_text {"message": "hello"}    # Call a tool
+> help                                    # Show help
+```
+
+### Comparison with Kimi CLI
+
+| Feature | chuk-acp-agent | Kimi CLI |
+|---------|----------------|----------|
+| `--mcp-config-file` option | ✅ Yes | ✅ Yes |
+| Standard `mcpServers` config | ✅ Yes | ✅ Yes |
+| Local MCP servers (stdio) | ✅ Yes | ✅ Yes |
+| Remote MCP servers (HTTP) | ❌ No | ✅ Yes |
+| Interactive REPL | ✅ Yes | ✅ Yes |
+| Custom agent development | ✅ Yes | ❌ No |
+| Editor integration (Zed, VS Code) | ✅ Yes | ❌ No |
+
+**Key differences:**
+- chuk-acp-agent focuses on **agent development** with editor integration
+- Kimi CLI focuses on **interactive use** with remote MCP servers
+- Both support the same config format for local MCP servers
+
+### Other Commands
+
+```bash
+chuk-acp-agent version   # Show version
+chuk-acp-agent help      # Show help
+```
+
 ## Quick Start
 
 ### Minimal Agent
