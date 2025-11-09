@@ -1,5 +1,7 @@
 """Tests for filesystem capability."""
 
+import os
+from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -27,11 +29,14 @@ class TestFileSystem:
         transport.get_streams = AsyncMock(return_value=(mock_read_stream, mock_write_stream))
         fs = FileSystem(transport)
 
+        # Use platform-independent absolute path
+        test_path = str(Path.cwd() / "file.txt")
+
         # Mock the send_fs_read_text_file function
         with patch("chuk_acp_agent.capabilities.filesystem.send_fs_read_text_file") as mock_read:
             mock_read.return_value = "file contents"
 
-            result = await fs.read_text("/absolute/path/file.txt")
+            result = await fs.read_text(test_path)
             assert result == "file contents"
 
     def test_validate_absolute_path_rejects_relative(self):
@@ -47,8 +52,11 @@ class TestFileSystem:
         transport = Mock()
         fs = FileSystem(transport)
 
+        # Use platform-independent absolute path
+        test_path = str(Path.cwd() / "path.txt")
+
         # Should not raise
-        fs._validate_absolute_path("/absolute/path.txt")
+        fs._validate_absolute_path(test_path)
 
     @pytest.mark.asyncio
     async def test_read_text_validates_path(self):
@@ -79,11 +87,14 @@ class TestFileSystem:
         transport.get_streams = AsyncMock(return_value=(mock_read_stream, mock_write_stream))
         fs = FileSystem(transport)
 
+        # Use platform-independent absolute path
+        test_path = str(Path.cwd() / "file.txt")
+
         # Mock the send_fs_read_text_file function
         with patch("chuk_acp_agent.capabilities.filesystem.send_fs_read_text_file") as mock_read:
             mock_read.return_value = "file contents"
 
-            result = await fs.read_text("/absolute/path/file.txt", require_permission=True)
+            result = await fs.read_text(test_path, require_permission=True)
             assert result == "file contents"
 
     @pytest.mark.asyncio
@@ -97,11 +108,14 @@ class TestFileSystem:
         transport.get_streams = AsyncMock(return_value=(mock_read_stream, mock_write_stream))
         fs = FileSystem(transport)
 
+        # Use platform-independent absolute path
+        test_path = str(Path.cwd() / "file.txt")
+
         # Mock the send_fs_write_text_file function
         with patch("chuk_acp_agent.capabilities.filesystem.send_fs_write_text_file") as mock_write:
             mock_write.return_value = None
 
-            await fs.write_text("/absolute/path/file.txt", "new contents")
+            await fs.write_text(test_path, "new contents")
             mock_write.assert_called_once()
 
     @pytest.mark.asyncio
@@ -115,9 +129,12 @@ class TestFileSystem:
         transport.get_streams = AsyncMock(return_value=(mock_read_stream, mock_write_stream))
         fs = FileSystem(transport)
 
+        # Use platform-independent absolute path
+        test_path = str(Path.cwd() / "file.txt")
+
         # Mock the send_fs_write_text_file function
         with patch("chuk_acp_agent.capabilities.filesystem.send_fs_write_text_file") as mock_write:
             mock_write.return_value = None
 
-            await fs.write_text("/absolute/path/file.txt", "new contents", require_permission=True)
+            await fs.write_text(test_path, "new contents", require_permission=True)
             mock_write.assert_called_once()
